@@ -1,5 +1,5 @@
 elasticSearch:
     cluster:
-        name: zzj-elastic-search
+        name: zzjElasticSearch
         ip: 127.0.0.1
         port: 9300
