@@ -35,14 +35,20 @@ public class Config {
 
 
 	public Config() {
-		builder = Settings.builder();
-		builder.put("cluster.name", esClusterName);
-		builder.put("client.transport.sniff", true);
-		builder.put("thread_pool.search.size", 5);
+		
+	}
 
-		settings = builder.build();
 
+
+	@Bean
+	public TransportClient transportClient() throws UnknownHostException {
 		try {
+			builder = Settings.builder();
+			builder.put("cluster.name", esClusterName);
+			builder.put("client.transport.sniff", true);
+			builder.put("thread_pool.search.size", 5);
+			settings = builder.build();
+
 			transportClient = new PreBuiltTransportClient(settings);
 			transportAddress = new TransportAddress(InetAddress.getByName(esHostIp), Integer.valueOf(port));
 
@@ -51,12 +57,7 @@ public class Config {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-	}
 
-
-
-	@Bean
-	public TransportClient transportClient() throws UnknownHostException {
 		return transportClient;
 	}
 

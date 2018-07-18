@@ -59,18 +59,11 @@ public class App {
 	@Autowired
 	private TransportClient transportClient;
 
-	private AdminClient adminClient;
-	
-	private IndicesAdminClient indicesAdminClient;
 	
 	
 	
 	
 	
-	public App() {
-		adminClient = transportClient.admin();
-		indicesAdminClient = adminClient.indices();
-	}
 	
 	
 
@@ -78,10 +71,15 @@ public class App {
 	/**
 	 * 创建 空索引
 	 * 
+	 * indices 就是索引
+	 * 
 	 */
 	@GetMapping("/createIndex")
 	@ResponseBody
 	public boolean createIndex(@RequestParam(name = "indexName", defaultValue = "") String indexName) throws IOException {
+		AdminClient adminClient = transportClient.admin();
+		IndicesAdminClient indicesAdminClient = adminClient.indices();
+
 		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
 
 		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
@@ -175,6 +173,9 @@ public class App {
 	@GetMapping(value = "/deleteIndex")
 	@ResponseBody
 	public boolean deleteIndex(@RequestParam(name = "indexName") String indexName) {
+		AdminClient adminClient = transportClient.admin();
+		IndicesAdminClient indicesAdminClient = adminClient.indices();
+		
 		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
 
 		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
