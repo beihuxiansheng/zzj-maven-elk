@@ -26,22 +26,37 @@ public class Config {
 	private String port;
 
 
+	
+	private Builder builder;
+	private Settings settings;
+	private TransportAddress transportAddress;
+	private TransportClient transportClient;
 
-	@Bean
-	public TransportClient getClient() throws UnknownHostException {
-		Builder builder = Settings.builder();
+
+
+	public Config() {
+		builder = Settings.builder();
 		builder.put("cluster.name", esClusterName);
 		builder.put("client.transport.sniff", true);
 		builder.put("thread_pool.search.size", 5);
 
-		Settings settings = builder.build();
-        TransportAddress transportAddress = new TransportAddress(InetAddress.getByName(esHostIp), Integer.valueOf(port));
+		settings = builder.build();
 
-		TransportClient transportClient = new PreBuiltTransportClient(settings);
+		try {
+			transportClient = new PreBuiltTransportClient(settings);
+			transportAddress = new TransportAddress(InetAddress.getByName(esHostIp), Integer.valueOf(port));
 
-		//可以添加多个传输地址
-		transportClient.addTransportAddresses(transportAddress);
+			//可以添加多个传输地址
+			transportClient.addTransportAddresses(transportAddress);
+		} catch(Exception e) {
+			e.printStackTrace();
+		}
+	}
 
+
+
+	@Bean
+	public TransportClient transportClient() throws UnknownHostException {
 		return transportClient;
 	}
 

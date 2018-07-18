@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-
 import org.springframework.http.HttpStatus;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.action.ActionFuture;
@@ -60,6 +59,20 @@ public class App {
 	@Autowired
 	private TransportClient transportClient;
 
+	private AdminClient adminClient;
+	
+	private IndicesAdminClient indicesAdminClient;
+	
+	
+	
+	
+	
+	public App() {
+		adminClient = transportClient.admin();
+		indicesAdminClient = adminClient.indices();
+	}
+	
+	
 
 
 	/**
@@ -69,9 +82,6 @@ public class App {
 	@GetMapping("/createIndex")
 	@ResponseBody
 	public boolean createIndex(@RequestParam(name = "indexName", defaultValue = "") String indexName) throws IOException {
-		AdminClient adminClient = transportClient.admin();
-		IndicesAdminClient indicesAdminClient = adminClient.indices();
-
 		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
 
 		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
@@ -119,7 +129,7 @@ public class App {
 						  .startObject("res_no").field("type", "text").field("store", Boolean.TRUE).endObject()
 
 						  .startObject("title").field("type", "text")
-						  .field("index_analyzer", "ik_max_word")
+						  .field("analyzer", "ik_max_word")
 						  .field("search_analyzer", "ik_max_word")
 						  .field("store", Boolean.TRUE)
 						  .endObject()
@@ -164,10 +174,21 @@ public class App {
 	 */
 	@GetMapping(value = "/deleteIndex")
 	@ResponseBody
-	public boolean deleteIndex(@RequestParam(name = "index") String index) {
-		IndicesAdminClient indicesAdminClient = transportClient.admin().indices();
-		DeleteIndexResponse response = indicesAdminClient.prepareDelete(index).execute().actionGet();
-		return response.isAcknowledged();
+	public boolean deleteIndex(@RequestParam(name = "indexName") String indexName) {
+		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
+
+		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
+		IndicesExistsResponse indicesExistsResponse = actionFutureExists.actionGet();
+
+		if(indicesExistsResponse.isExists()) {
+			System.out.println("索引存在，能够删除...");
+			
+			DeleteIndexResponse response = indicesAdminClient.prepareDelete(indexName).execute().actionGet();
+			return response.isAcknowledged();
+		} else {
+			System.out.println("索引不存在，无法删除...");
+			return Boolean.FALSE;
+		}
 	}
 	
 	
@@ -253,8 +274,7 @@ public class App {
 	 */
 	@GetMapping("/searchDataPage")
 	@ResponseBody
-	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type) {
-		
+	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String searchValue) {
 		int startPage = 1;
 		int pageSize = 10;
 		String[] fields = {"title"};
@@ -262,7 +282,7 @@ public class App {
 		String highlightField = null;
 
 		//
-		QueryBuilder query = QueryBuilders.matchQuery("title", "球星拍成");
+		QueryBuilder query = QueryBuilders.matchQuery("title", searchValue);
 
 		// 创建查询请求
         SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
