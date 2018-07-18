@@ -40,8 +40,7 @@ public class Config {
 
 
 
-	@Bean
-	public TransportClient transportClient() throws UnknownHostException {
+	public TransportClient getTransportClient() throws UnknownHostException {
 		try {
 			builder = Settings.builder();
 			builder.put("cluster.name", esClusterName);

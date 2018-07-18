@@ -1,6 +1,7 @@
 package com.core;
 
 import java.io.IOException;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +34,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.core.bean.PageBean;
+import com.core.config.Config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -57,7 +59,7 @@ public class App {
 
 	//1. 字段
 	@Autowired
-	private TransportClient transportClient;
+	private Config elasticConfig;
 
 	
 	
@@ -77,6 +79,7 @@ public class App {
 	@GetMapping("/createIndex")
 	@ResponseBody
 	public boolean createIndex(@RequestParam(name = "indexName", defaultValue = "") String indexName) throws IOException {
+		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
@@ -94,7 +97,8 @@ public class App {
 			//CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(indexName);
 			//ActionFuture<CreateIndexResponse> actionFutureCreate = createIndexRequestBuilder.execute();
 			//CreateIndexResponse createIndexResponse = actionFutureCreate.actionGet();
-			CreateIndexResponse createIndexResponse = indicesAdminClient.prepareCreate(indexName).execute().actionGet();
+			CreateIndexResponse createIndexResponse = indicesAdminClient.prepareCreate(indexName).execute().actionGet(60 * 1000);
+			transportClient.close();
 
 			return createIndexResponse.isAcknowledged();
 		}
@@ -154,10 +158,12 @@ public class App {
 			return false;
 		}
 
+		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
-		PutMappingResponse response = indicesAdminClient.preparePutMapping(index).setType(type).setSource(mappingBuilder).get();
+		PutMappingResponse response = indicesAdminClient.preparePutMapping(index).setType(type).setSource(mappingBuilder).execute().actionGet(60 * 1000);
+		transportClient.close();
 
 		return response.isAcknowledged();
 	}
@@ -168,12 +174,15 @@ public class App {
 
 	/**
 	 * 删除索引
+	 * @throws UnknownHostException 
 	 * 
 	 */
 	@GetMapping(value = "/deleteIndex")
 	@ResponseBody
-	public boolean deleteIndex(@RequestParam(name = "indexName") String indexName) {
+	public boolean deleteIndex(@RequestParam(name = "indexName") String indexName) throws UnknownHostException {
+		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
+
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 		
 		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
@@ -183,11 +192,12 @@ public class App {
 
 		if(indicesExistsResponse.isExists()) {
 			System.out.println("索引存在，能够删除...");
-			
-			DeleteIndexResponse response = indicesAdminClient.prepareDelete(indexName).execute().actionGet();
+			DeleteIndexResponse response = indicesAdminClient.prepareDelete(indexName).execute().actionGet(60 * 1000);
+			transportClient.close();
 			return response.isAcknowledged();
 		} else {
 			System.out.println("索引不存在，无法删除...");
+			transportClient.close();
 			return Boolean.FALSE;
 		}
 	}
@@ -248,11 +258,13 @@ public class App {
 
 	/**
 	 * 根据ID查询数据
+	 * @throws UnknownHostException 
 	 * 
 	 */
 	@GetMapping("/getDataById")
 	@ResponseBody
-	public ResponseEntity getData(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) {
+	public ResponseEntity getData(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) throws UnknownHostException {
+		TransportClient transportClient = elasticConfig.getTransportClient();
 		GetRequestBuilder getRequestBuilder = transportClient.prepareGet(index, type, id);
 		GetResponse getResponse = getRequestBuilder.get();
 
@@ -271,11 +283,15 @@ public class App {
 
 	/**
 	 * 分页查询数据
+	 * @throws UnknownHostException 
 	 * 
 	 */
 	@GetMapping("/searchDataPage")
 	@ResponseBody
-	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String searchValue) {
+	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String searchValue) throws UnknownHostException {
+		TransportClient transportClient = elasticConfig.getTransportClient();
+		AdminClient adminClient = transportClient.admin();
+		
 		int startPage = 1;
 		int pageSize = 10;
 		String[] fields = {"title"};
@@ -324,7 +340,8 @@ public class App {
         searchRequestBuilder.setExplain(true);
 
         // 执行搜索,返回搜索响应信息
-        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet();
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(60 * 1000);
+        transportClient.close();
 
         long totalHits = searchResponse.getHits().totalHits;
         long length = searchResponse.getHits().getHits().length;
