@@ -201,9 +201,9 @@ public class App {
 			return Boolean.FALSE;
 		}
 	}
-	
-	
-	
+
+
+
 
 
 
@@ -291,7 +291,7 @@ public class App {
 	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String searchValue) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
-		
+
 		int startPage = 1;
 		int pageSize = 10;
 		String[] fields = {"title"};
