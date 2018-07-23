@@ -1,7 +1,7 @@
 package com.core.bean;
 
-import java.util.List;
 import java.util.Map;
+import java.util.List;
 
 
 
@@ -21,7 +21,7 @@ public class PageBean {
      * 总记录数
      */
     private int recordCount;
-    
+
     /**
      * 本页的数据列表
      */
@@ -36,7 +36,7 @@ public class PageBean {
      * 页码列表的开始索引（包含）
      */
     private int beginPageIndex;
-    
+
     /**
      * 页码列表的结束索引（包含）
      */

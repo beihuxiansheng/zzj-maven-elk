@@ -1,45 +1,43 @@
 package com.core;
 
-import java.io.IOException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
+import java.util.List;
+import java.io.IOException;
+import java.util.ArrayList;
+import com.core.bean.PageBean;
+import com.core.config.Config;
+import java.net.UnknownHostException;
+import org.elasticsearch.search.SearchHit;
+import org.elasticsearch.common.text.Text;
 import org.springframework.http.HttpStatus;
 import org.elasticsearch.client.AdminClient;
 import org.elasticsearch.action.ActionFuture;
+import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.http.ResponseEntity;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.action.search.SearchType;
 import org.springframework.boot.SpringApplication;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.action.index.IndexResponse;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.action.get.GetRequestBuilder;
-import org.elasticsearch.common.text.Text;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
-import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
-import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.elasticsearch.client.transport.TransportClient;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.elasticsearch.action.search.SearchRequestBuilder;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.core.bean.PageBean;
-import com.core.config.Config;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.elasticsearch.action.admin.indices.create.CreateIndexResponse;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexResponse;
+import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingResponse;
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequestBuilder;
 import org.elasticsearch.action.admin.indices.exists.indices.IndicesExistsRequest;
@@ -61,13 +59,6 @@ public class App {
 	@Autowired
 	private Config elasticConfig;
 
-	
-	
-	
-	
-	
-	
-	
 
 
 	/**
@@ -78,12 +69,12 @@ public class App {
 	 */
 	@GetMapping("/createIndex")
 	@ResponseBody
-	public boolean createIndex(@RequestParam(name = "indexName", defaultValue = "") String indexName) throws IOException {
+	public boolean createIndex(@RequestParam(name = "index", defaultValue = "") String index) throws IOException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
 
-		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
+		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(index);
 
 		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
 		IndicesExistsResponse indicesExistsResponse = actionFutureExists.actionGet();
@@ -97,7 +88,7 @@ public class App {
 			//CreateIndexRequestBuilder createIndexRequestBuilder = indicesAdminClient.prepareCreate(indexName);
 			//ActionFuture<CreateIndexResponse> actionFutureCreate = createIndexRequestBuilder.execute();
 			//CreateIndexResponse createIndexResponse = actionFutureCreate.actionGet();
-			CreateIndexResponse createIndexResponse = indicesAdminClient.prepareCreate(indexName).execute().actionGet(60 * 1000);
+			CreateIndexResponse createIndexResponse = indicesAdminClient.prepareCreate(index).execute().actionGet(60 * 1000);
 			transportClient.close();
 
 			return createIndexResponse.isAcknowledged();
@@ -114,9 +105,9 @@ public class App {
 	 * 设置映射API允许我们在指定索引上一次性创建或修改一到多个索引的映射。设置映射必须确保指定的索引存在，否则会报错。
 	 * 
 	 */
-	@GetMapping("/putIndexMapping")
+	@GetMapping("/putMapping")
 	@ResponseBody
-	public boolean putIndexMapping(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type) throws Exception {
+	public boolean putMapping(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type) throws Exception {
 		// mapping
 		XContentBuilder mappingBuilder;
 
@@ -177,22 +168,20 @@ public class App {
 	 * @throws UnknownHostException 
 	 * 
 	 */
-	@GetMapping(value = "/deleteIndex")
+	@GetMapping(value = "/removeIndex")
 	@ResponseBody
-	public boolean deleteIndex(@RequestParam(name = "indexName") String indexName) throws UnknownHostException {
+	public boolean removeIndex(@RequestParam(name = "index") String index) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 		AdminClient adminClient = transportClient.admin();
-
 		IndicesAdminClient indicesAdminClient = adminClient.indices();
-		
-		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(indexName);
+		IndicesExistsRequest indicesExistsRequest = new IndicesExistsRequest(index);
 
 		ActionFuture<IndicesExistsResponse> actionFutureExists = indicesAdminClient.exists(indicesExistsRequest);
 		IndicesExistsResponse indicesExistsResponse = actionFutureExists.actionGet();
 
 		if(indicesExistsResponse.isExists()) {
 			System.out.println("索引存在，能够删除...");
-			DeleteIndexResponse response = indicesAdminClient.prepareDelete(indexName).execute().actionGet(60 * 1000);
+			DeleteIndexResponse response = indicesAdminClient.prepareDelete(index).execute().actionGet(60 * 1000);
 			transportClient.close();
 			return response.isAcknowledged();
 		} else {
@@ -263,7 +252,7 @@ public class App {
 	 */
 	@GetMapping("/getDataById")
 	@ResponseBody
-	public ResponseEntity getData(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) throws UnknownHostException {
+	public ResponseEntity getDataById(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 		GetRequestBuilder getRequestBuilder = transportClient.prepareGet(index, type, id);
 		GetResponse getResponse = getRequestBuilder.get();
@@ -286,20 +275,19 @@ public class App {
 	 * @throws UnknownHostException 
 	 * 
 	 */
-	@GetMapping("/searchDataPage")
+	@GetMapping("/pageSearch")
 	@ResponseBody
-	public PageBean searchDataPage(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String searchValue) throws UnknownHostException {
+	public PageBean pageSearch(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String value) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
-		AdminClient adminClient = transportClient.admin();
 
 		int startPage = 1;
 		int pageSize = 10;
 		String[] fields = {"title"};
 		String sortField = null;
-		String highlightField = null;
+		// String highlightField = null;
 
-		//
-		QueryBuilder query = QueryBuilders.matchQuery("title", searchValue);
+		// 创建查询
+		QueryBuilder query = QueryBuilders.matchQuery("title", value);
 
 		// 创建查询请求
         SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
@@ -308,18 +296,15 @@ public class App {
         searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
 
         // 需要显示的字段，逗号分隔（缺省为全部字段）
-        /*if (fields != null && fields.contains(",")) {
-            searchRequestBuilder.setFetchSource(fields.split(","), null);
-        }*/
         searchRequestBuilder.setFetchSource(fields, null);
 
         // 排序字段
-        if (sortField != null) {
+        /*if (sortField != null) {
             searchRequestBuilder.addSort(sortField, SortOrder.DESC);
-        }
+        }*/
 
         // 高亮（xxx=111,aaa=222）
-        if (highlightField != null) {
+        /*if (highlightField != null) {
             HighlightBuilder highlightBuilder = new HighlightBuilder();
 
             //highlightBuilder.preTags("<span style='color:red' >");     //设置前缀
@@ -328,7 +313,7 @@ public class App {
             // 设置高亮字段
             highlightBuilder.field(highlightField);
             searchRequestBuilder.highlighter(highlightBuilder);
-        }
+        }*/
 
         //searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
         searchRequestBuilder.setQuery(query);
@@ -346,17 +331,16 @@ public class App {
         long totalHits = searchResponse.getHits().totalHits;
         long length = searchResponse.getHits().getHits().length;
 
-        System.out.println("共查询到" + totalHits + "条数据,处理数据条数" + length);
+        System.out.println("共查询到" + totalHits + "条数据，处理数据条数" + length);
 
         if (searchResponse.status().getStatus() == 200) {
         	// 解析对象
-            List<Map<String, Object>> sourceList = setSearchResponse(searchResponse, highlightField);
+            List<Map<String, Object>> sourceList = setSearchResponse(searchResponse, null /*highlightField*/);
 
             return new PageBean(startPage, pageSize, (int) totalHits, sourceList);
         } else {
         	return null;
         }
-
     }
 
 
@@ -397,28 +381,11 @@ public class App {
 	
 	
 	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
-	
 
+    
+    
 	/**
+	 * 程序入口
 	 * 
 	 */
     public static void main( String[] args ) {
@@ -426,8 +393,8 @@ public class App {
         System.out.println( "Spring boot integrate elastic search starts!" );
     }
 
-    
-    
-    
-    
+
+
+
+
 }
