@@ -118,7 +118,8 @@ public class App {
 			mappingBuilder.startObject(type);
 			mappingBuilder.startObject("properties");
 
-			mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			// t_fashion_information
+			/*mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
 						  .startObject("res_no").field("type", "text").field("store", Boolean.TRUE).endObject()
 
 						  .startObject("title").field("type", "text")
@@ -138,12 +139,29 @@ public class App {
 						  .startObject("release_time").field("type", "date").field("store", Boolean.TRUE).endObject()
 						  .startObject("create_time").field("type", "date").field("store", Boolean.TRUE).endObject()
 						  .startObject("modify_time").field("type", "date").field("store", Boolean.TRUE).endObject()
-						  .startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();
+						  .startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();*/
+
+			// t_shop
+			mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("out_no").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("shop_name").field("type", "text")
+			.field("analyzer", "ik_max_word")
+			.field("search_analyzer", "ik_max_word")
+			.field("store", Boolean.TRUE)
+			.endObject()
+			.startObject("shop_address").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("shop_logo").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("index_url").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("status").field("type", "long").field("store", Boolean.TRUE).endObject()
+			.startObject("create_user").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("create_time").field("type", "date").field("store", Boolean.TRUE).endObject()
+			.startObject("modify_user").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("modify_time").field("type", "date").field("store", Boolean.TRUE).endObject()
+			.startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();
 
 			mappingBuilder.endObject();
 			mappingBuilder.endObject();
 			mappingBuilder.endObject();
-
 		} catch (Exception e) {
 			System.out.println("--------- createIndex 创建 mapping 失败：");
 			return false;
@@ -165,7 +183,6 @@ public class App {
 
 	/**
 	 * 删除索引
-	 * @throws UnknownHostException 
 	 * 
 	 */
 	@GetMapping(value = "/removeIndex")
@@ -240,19 +257,14 @@ public class App {
 
 
 
-
-
-
-
-
 	/**
 	 * 根据ID查询数据
 	 * @throws UnknownHostException 
 	 * 
 	 */
-	@GetMapping("/getDataById")
+	@GetMapping("/getById")
 	@ResponseBody
-	public ResponseEntity getDataById(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) throws UnknownHostException {
+	public ResponseEntity getById(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, @RequestParam(name = "id") String id) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 		GetRequestBuilder getRequestBuilder = transportClient.prepareGet(index, type, id);
 		GetResponse getResponse = getRequestBuilder.get();
@@ -282,7 +294,7 @@ public class App {
 
 		int startPage = 1;
 		int pageSize = 10;
-		String[] fields = {"title"};
+		String[] fields_1 = {"title"};
 		String sortField = null;
 		// String highlightField = null;
 
@@ -296,7 +308,7 @@ public class App {
         searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
 
         // 需要显示的字段，逗号分隔（缺省为全部字段）
-        searchRequestBuilder.setFetchSource(fields, null);
+        searchRequestBuilder.setFetchSource(fields_1, null);
 
         // 排序字段
         /*if (sortField != null) {
