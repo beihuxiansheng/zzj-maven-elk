@@ -15,10 +15,15 @@ import org.elasticsearch.action.ActionFuture;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.http.ResponseEntity;
 import org.elasticsearch.action.get.GetResponse;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.MatchPhraseQueryBuilder;
+import org.elasticsearch.index.query.MatchQueryBuilder;
+import org.elasticsearch.index.query.MultiMatchQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.action.search.SearchType;
 import org.springframework.boot.SpringApplication;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.client.IndicesAdminClient;
 import org.elasticsearch.action.index.IndexResponse;
 import org.elasticsearch.action.search.SearchResponse;
@@ -142,7 +147,7 @@ public class App {
 						  .startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();*/
 
 			// t_shop
-			mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			/*mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
 			.startObject("out_no").field("type", "text").field("store", Boolean.TRUE).endObject()
 			.startObject("shop_name").field("type", "text")
 			.field("analyzer", "ik_max_word")
@@ -157,7 +162,57 @@ public class App {
 			.startObject("create_time").field("type", "date").field("store", Boolean.TRUE).endObject()
 			.startObject("modify_user").field("type", "text").field("store", Boolean.TRUE).endObject()
 			.startObject("modify_time").field("type", "date").field("store", Boolean.TRUE).endObject()
-			.startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();
+			.startObject("batch_no").field("type", "text").field("store", Boolean.TRUE).endObject();*/
+
+			// selection
+			mappingBuilder.startObject("id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("res_no").field("type", "text").field("store", Boolean.TRUE).endObject()
+
+			.startObject("title").field("type", "text")
+			.field("analyzer", "ik_max_word")
+			.field("search_analyzer", "ik_max_word")
+			.field("store", Boolean.TRUE)
+			.endObject()
+
+			.startObject("branch").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("branch_analyze").field("type", "text")
+			.field("analyzer", "ik_max_word")
+			.field("search_analyzer", "ik_max_word")
+			.field("store", Boolean.TRUE)
+			.endObject()
+
+			.startObject("to_new_date").field("type", "date").field("store", Boolean.TRUE).endObject()
+			.startObject("shop_id").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("price").field("type", "double").field("store", Boolean.TRUE).endObject()
+			.startObject("original_price").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("res_url").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("outer_res_no").field("type", "text").field("store", Boolean.TRUE).endObject()
+
+			.startObject("res_attr").field("type", "text")
+			.field("analyzer", "ik_max_word")
+			.field("search_analyzer", "ik_max_word")
+			.field("store", Boolean.TRUE)
+			.endObject()
+
+			.startObject("status").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("create_time").field("type", "date").field("store", Boolean.TRUE).endObject()
+			.startObject("modify_time").field("type", "date").field("store", Boolean.TRUE).endObject()
+			.startObject("m_sale_count").field("type", "long").field("store", Boolean.TRUE).endObject()
+			.startObject("accum_comment_count").field("type", "long").field("store", Boolean.TRUE).endObject()
+			.startObject("popularity_count").field("type", "long").field("store", Boolean.TRUE).endObject()
+			.startObject("sale_count").field("type", "long").field("store", Boolean.TRUE).endObject()
+
+			.startObject("shop_name").field("type", "keyword").field("store", Boolean.TRUE).endObject()
+			.startObject("shop_name_analyze").field("type", "text")
+			.field("analyzer", "ik_max_word")
+			.field("search_analyzer", "ik_max_word")
+			.field("store", Boolean.TRUE)
+			.endObject()
+
+			.startObject("shop_address").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("shop_logo").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("index_url").field("type", "text").field("store", Boolean.TRUE).endObject()
+			.startObject("source_media").field("type", "keyword").field("store", Boolean.TRUE).endObject();
 
 			mappingBuilder.endObject();
 			mappingBuilder.endObject();
@@ -289,70 +344,48 @@ public class App {
 	 */
 	@GetMapping("/pageSearch")
 	@ResponseBody
-	public PageBean pageSearch(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, String value) throws UnknownHostException {
+	public PageBean pageSearch(String value) throws UnknownHostException {
 		TransportClient transportClient = elasticConfig.getTransportClient();
 
 		int startPage = 1;
 		int pageSize = 10;
-		String[] fields_1 = {"title"};
 		String sortField = null;
 		// String highlightField = null;
 
-		// 创建查询
-		QueryBuilder query = QueryBuilders.matchQuery("title", value);
+		// 执行查询
+		SearchResponse searchResponse1 = queryEs(transportClient, "index1", "t_fashion_information", "title", value);
+		SearchResponse searchResponse2 = queryEs(transportClient, "index2", "t_shop", "shop_name", value);
 
-		// 创建查询请求
-        SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
-
-        searchRequestBuilder.setTypes(type);
-        searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
-
-        // 需要显示的字段，逗号分隔（缺省为全部字段）
-        searchRequestBuilder.setFetchSource(fields_1, null);
-
-        // 排序字段
-        /*if (sortField != null) {
-            searchRequestBuilder.addSort(sortField, SortOrder.DESC);
-        }*/
-
-        // 高亮（xxx=111,aaa=222）
-        /*if (highlightField != null) {
-            HighlightBuilder highlightBuilder = new HighlightBuilder();
-
-            //highlightBuilder.preTags("<span style='color:red' >");     //设置前缀
-            //highlightBuilder.postTags("</span>");                      //设置后缀
-
-            // 设置高亮字段
-            highlightBuilder.field(highlightField);
-            searchRequestBuilder.highlighter(highlightBuilder);
-        }*/
-
-        //searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
-        searchRequestBuilder.setQuery(query);
-
-        // 分页应用
-        searchRequestBuilder.setFrom(startPage).setSize(pageSize);
-
-        // 设置是否按查询匹配度排序
-        searchRequestBuilder.setExplain(true);
-
-        // 执行搜索,返回搜索响应信息
-        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(60 * 1000);
+		// 关闭客户端
         transportClient.close();
 
-        long totalHits = searchResponse.getHits().totalHits;
-        long length = searchResponse.getHits().getHits().length;
+        // 
+        long totalHits1 = searchResponse1.getHits().getTotalHits();
+        long length1 = searchResponse1.getHits().getHits().length;
 
-        System.out.println("共查询到" + totalHits + "条数据，处理数据条数" + length);
+        System.out.println("index1 共查询到" + totalHits1 + "条数据，处理数据条数" + length1);
 
-        if (searchResponse.status().getStatus() == 200) {
+        long totalHits2 = searchResponse2.getHits().getTotalHits();
+        long length2 = searchResponse2.getHits().getHits().length;
+
+        System.out.println("index2 共查询到" + totalHits2 + "条数据，处理数据条数" + length2);
+
+        //
+        List<Map<String, Object>> listDataAll = new ArrayList<Map<String, Object>>();
+
+        if (searchResponse1.status().getStatus() == 200) {
         	// 解析对象
-            List<Map<String, Object>> sourceList = setSearchResponse(searchResponse, null /*highlightField*/);
-
-            return new PageBean(startPage, pageSize, (int) totalHits, sourceList);
-        } else {
-        	return null;
+            List<Map<String, Object>> sourceList = setSearchResponse(searchResponse1, null /*highlightField*/);
+            listDataAll.addAll(sourceList);
         }
+
+        if (searchResponse2.status().getStatus() == 200) {
+        	// 解析对象
+            List<Map<String, Object>> sourceList = setSearchResponse(searchResponse2, null /*highlightField*/);
+            listDataAll.addAll(sourceList);
+        }
+
+        return new PageBean(startPage, pageSize, (int) ( totalHits1 + totalHits2 ), listDataAll);
     }
 
 
@@ -386,16 +419,213 @@ public class App {
 
         return sourceList;
     }
-	
-	
-	
-	
-	
-	
-	
+
 
     
     
+    
+    
+    /**
+     * 按条件执行查询
+     */
+    private SearchResponse queryEs(TransportClient transportClient, String index, String type, String field, String value) {
+    	// 创建查询
+		QueryBuilder query = QueryBuilders.matchQuery(field, value);
+
+		// 创建查询请求
+        SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
+        searchRequestBuilder.setTypes(type);
+        searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
+
+        // 需要显示的字段，逗号分隔（缺省为全部字段）
+        searchRequestBuilder.setFetchSource(field, null);
+
+        // 排序字段
+        /*if (sortField != null) {
+            searchRequestBuilder.addSort(sortField, SortOrder.DESC);
+        }*/
+
+        // 高亮（xxx=111,aaa=222）
+        /*if (highlightField != null) {
+            HighlightBuilder highlightBuilder = new HighlightBuilder();
+
+            //highlightBuilder.preTags("<span style='color:red' >");     //设置前缀
+            //highlightBuilder.postTags("</span>");                      //设置后缀
+
+            // 设置高亮字段
+            highlightBuilder.field(highlightField);
+            searchRequestBuilder.highlighter(highlightBuilder);
+        }*/
+
+        //searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+        searchRequestBuilder.setQuery(query);
+
+        // 分页应用
+        //searchRequestBuilder.setFrom(startPage).setSize(pageSize);
+
+        // 设置是否按查询匹配度排序
+        searchRequestBuilder.setExplain(Boolean.TRUE);
+
+        // 执行搜索, 返回搜索响应信息
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(60 * 1000);
+        
+        //
+        return searchResponse;
+    }
+    
+    
+
+
+
+
+    
+    
+    
+    
+    
+    
+    
+    /**
+	 * 分页查询数据
+	 * 
+	 * @url:
+	 * http://localhost:8080/pageSearch2?index=index3&type=selection&shopName=裂帛服饰旗舰店&branch=裂帛&sourceMedia=4&value1=旗舰店&title1=&title2=&title3=&resNo=
+	 * 
+	 * @param
+	 * 
+	 * 
+	 */
+	@GetMapping("/pageSearch2")
+	@ResponseBody
+	public PageBean pageSearch2(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, 
+			@RequestParam(name = "shopName") String shopName, @RequestParam(name = "branch") String branch, @RequestParam(name = "sourceMedia") String sourceMedia, @RequestParam(name = "value1") String value1,
+			@RequestParam(name = "title1") String title1, @RequestParam(name = "title2") String title2, @RequestParam(name = "title3") String title3, @RequestParam(name = "resNo") String resNo) throws UnknownHostException {
+
+		TransportClient transportClient = elasticConfig.getTransportClient();
+
+		int startPage = 1;
+		int pageSize = 10;
+		String[] fields = {"title"};
+		String sortField = null;
+
+		// 创建查询
+		TermQueryBuilder termQueryBuilder_1 = QueryBuilders.termQuery("shop_name", shopName);
+		TermQueryBuilder termQueryBuilder_2 = QueryBuilders.termQuery("branch", branch);
+		TermQueryBuilder termQueryBuilder_3 = QueryBuilders.termQuery("source_media", sourceMedia);
+		MultiMatchQueryBuilder multiMatchQueryBuilder = QueryBuilders.multiMatchQuery(value1, "title", "shop_name_analyze", "branch_analyze", "res_attr");
+		MatchQueryBuilder matchQueryBuilder1 = QueryBuilders.matchQuery("title", title1);
+		MatchQueryBuilder matchQueryBuilder2 = QueryBuilders.matchQuery("title", title2);
+		MatchQueryBuilder matchQueryBuilder3 = QueryBuilders.matchQuery("title", title3);
+
+		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
+
+		boolQueryBuilder
+		.must(termQueryBuilder_1)
+		.must(termQueryBuilder_2)
+		.must(termQueryBuilder_3)
+		.must(multiMatchQueryBuilder)
+		.must(matchQueryBuilder1)
+		.must(matchQueryBuilder2)
+		.must(matchQueryBuilder3);
+
+		// 创建查询请求
+        SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
+
+        searchRequestBuilder.setTypes(type);
+        searchRequestBuilder.setSearchType(SearchType.QUERY_THEN_FETCH);
+
+        //
+        //searchRequestBuilder.setFetchSource(fields, null);
+
+        // 排序字段
+        if (sortField != null) {
+            searchRequestBuilder.addSort(sortField, SortOrder.DESC);
+        }
+
+        //searchRequestBuilder.setQuery(QueryBuilders.matchAllQuery());
+        searchRequestBuilder.setQuery(boolQueryBuilder);
+
+        // 分页应用
+        searchRequestBuilder.setFrom(startPage).setSize(pageSize);
+
+        // 设置是否按查询匹配度排序
+        searchRequestBuilder.setExplain(true);
+
+        // 执行搜索,返回搜索响应信息
+        SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(60 * 1000);
+        transportClient.close();
+
+        long totalHits = searchResponse.getHits().getTotalHits();
+        long length = searchResponse.getHits().getHits().length;
+
+        System.out.println("共查询到" + totalHits + "条数据,处理数据条数" + length);
+
+        transportClient.close();
+        
+        if (searchResponse.status().getStatus() == 200) {
+        	// 解析对象
+            List<Map<String, Object>> sourceList = new ArrayList<Map<String, Object>>();
+
+            //
+            for(SearchHit searchHit : searchResponse.getHits().getHits()) {
+                sourceList.add(searchHit.getSourceAsMap());
+            }
+
+            //pagingMapResult.setTotalCount(totalHits);
+            //pagingMapResult.setPageNo(startPage);
+            //pagingMapResult.setPageSize(pageSize);
+            //pagingMapResult.setMapResult(sourceList);
+            
+            return new PageBean(startPage, pageSize, 0, sourceList);
+        } else {
+        	return null;
+        }
+
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+
+
+
+
 	/**
 	 * 程序入口
 	 * 
