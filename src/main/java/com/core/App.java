@@ -491,8 +491,9 @@ public class App {
 	 * @url:
 	 * http://localhost:8080/pageSearch2?index=index3&type=selection&shopName=裂帛服饰旗舰店&branch=裂帛&sourceMedia=4&value1=旗舰店&title1=&title2=&title3=&resNo=
 	 * 
-	 * @param
+	 * 对于termQuery进行完全匹配的字段，需要把字段类型设置为keyword
 	 * 
+	 * @param
 	 * 
 	 */
 	@GetMapping("/pageSearch2")
