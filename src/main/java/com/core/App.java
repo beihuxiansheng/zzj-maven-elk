@@ -489,7 +489,7 @@ public class App {
 	 * 分页查询数据
 	 * 
 	 * @url:
-	 * http://localhost:8080/pageSearch2?index=index3&type=selection&shopName=裂帛服饰旗舰店&branch=裂帛&sourceMedia=4&value1=旗舰店&title1=&title2=&title3=&resNo=
+	 * http://localhost:8080/pageSearch2?index=index3&type=selection&shopName=裂帛服饰旗舰店&branch=裂帛&sourceMedia=4&value1=旗舰店&title1=连衣裙&title2=新款&title3=收腰
 	 * 
 	 * 对于termQuery进行完全匹配的字段，需要把字段类型设置为keyword
 	 * 
@@ -500,7 +500,7 @@ public class App {
 	@ResponseBody
 	public PageBean pageSearch2(@RequestParam(name = "index") String index, @RequestParam(name = "type") String type, 
 			@RequestParam(name = "shopName") String shopName, @RequestParam(name = "branch") String branch, @RequestParam(name = "sourceMedia") String sourceMedia, @RequestParam(name = "value1") String value1,
-			@RequestParam(name = "title1") String title1, @RequestParam(name = "title2") String title2, @RequestParam(name = "title3") String title3, @RequestParam(name = "resNo") String resNo) throws UnknownHostException {
+			@RequestParam(name = "title1") String title1, @RequestParam(name = "title2") String title2, @RequestParam(name = "title3") String title3) throws UnknownHostException {
 
 		TransportClient transportClient = elasticConfig.getTransportClient();
 
