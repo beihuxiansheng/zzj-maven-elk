@@ -44,7 +44,7 @@ public class Config {
 		try {
 			builder = Settings.builder();
 			builder.put("cluster.name", esClusterName);
-			builder.put("client.transport.sniff", true);
+			builder.put("client.transport.sniff", true);        // 集群环境中有时候需要配置成 false
 			builder.put("thread_pool.search.size", 5);
 			settings = builder.build();
 
