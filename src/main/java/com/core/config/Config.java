@@ -18,7 +18,7 @@ public class Config {
 
 	@Value("${elasticSearch.cluster.name}")
 	private String esClusterName;
-	
+
 	@Value("${elasticSearch.cluster.ip}")
 	private String esHostIp;
 
@@ -26,7 +26,7 @@ public class Config {
 	private String port;
 
 
-	
+
 	private Builder builder;
 	private Settings settings;
 	private TransportAddress transportAddress;
@@ -35,12 +35,6 @@ public class Config {
 
 
 	public Config() {
-		
-	}
-
-
-
-	public TransportClient getTransportClient() throws UnknownHostException {
 		try {
 			builder = Settings.builder();
 			builder.put("cluster.name", esClusterName);
@@ -56,7 +50,12 @@ public class Config {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
+	}
 
+
+
+	@Bean
+	public TransportClient getTransportClient() throws UnknownHostException {
 		return transportClient;
 	}
 
