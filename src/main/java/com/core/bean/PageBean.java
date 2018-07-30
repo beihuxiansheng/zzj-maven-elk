@@ -1,11 +1,10 @@
 package com.core.bean;
 
-import java.util.Map;
 import java.util.List;
 
 
 
-public class PageBean {
+public class PageBean<T> {
 
 	/**
      * 当前页
@@ -25,7 +24,7 @@ public class PageBean {
     /**
      * 本页的数据列表
      */
-    private List<Map<String, Object>> recordList;
+    private List<T> recordList;
 
     /**
      * 总页数
@@ -52,7 +51,7 @@ public class PageBean {
      * @param recordCount
      * @param recordList
      */
-    public PageBean(int currentPage, int pageSize, int recordCount, List<Map<String, Object>> recordList) {
+    public PageBean(int currentPage, int pageSize, int recordCount, List<T> recordList) {
     	this.currentPage = currentPage;
         this.pageSize = pageSize;
         this.recordCount = recordCount;
@@ -87,6 +86,16 @@ public class PageBean {
             }
         }
     }
+    
+    
+    
+    
+    
+    public PageBean() {
+    	
+    }
+    
+    
 
 
 
@@ -114,11 +123,11 @@ public class PageBean {
 		this.recordCount = recordCount;
 	}
 
-	public List<Map<String, Object>> getRecordList() {
+	public List<T> getRecordList() {
 		return recordList;
 	}
 
-	public void setRecordList(List<Map<String, Object>> recordList) {
+	public void setRecordList(List<T> recordList) {
 		this.recordList = recordList;
 	}
 
