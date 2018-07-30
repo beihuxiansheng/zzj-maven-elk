@@ -1,0 +1,78 @@
+{
+    "template": "dress_index_fashion_1",
+    "version": 1,
+	"settings": {
+        "index.refresh_interval": "5s"
+    },
+    "mappings": {
+        "_default_": {
+            "date_detection": false
+        },
+		"dress_index_fashion_1" :{
+			"properties": {
+				"id": {
+					"type": "keyword",
+					"store": true
+				},
+				"resno": {
+					"type": "text",
+					"store": true
+				},
+				"title": {
+					"type": "text",
+					"store": true,
+					"analyzer": "ik_max_word"
+				},
+				"outerresno": {
+					"type": "text",
+					"store": true
+				},
+				"resattr": {
+					"type": "text",
+					"store": true,
+					"analyzer": "ik_max_word"
+				},
+				"status": {
+					"type": "keyword",
+					"store": true
+				},
+				"releasetime": {
+					"type": "date",
+					"store": true
+				},
+				"createtime": {
+					"type": "date",
+					"store": true
+				},
+				"modifytime": {
+				    "type": "date",
+					"store": true
+				},
+				"praisecount": {
+					"type": "long",
+					"store": true
+				},
+				"forwardcount": {
+					"type": "long",
+					"store": true
+				},
+				"commentcount": {
+					"type": "long",
+					"store": true
+				},
+				"sourcename": {
+					"type": "text",
+					"store": true
+				},
+				"sourceMedia": {
+					"type": "keyword",
+					"store": true
+				},
+				"sourceurl": {
+					"type": "text",
+					"store": true
+				}
+			}
+		}
+    }
+}
