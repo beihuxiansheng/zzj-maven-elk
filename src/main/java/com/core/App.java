@@ -12,8 +12,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class App {
 
-
-	
 	/**
 	 * 程序入口
 	 * 
@@ -22,6 +20,5 @@ public class App {
     	SpringApplication.run(App.class, args);
         System.out.println( "Spring boot integrate elastic search starts!" );
     }
-
 
 }
