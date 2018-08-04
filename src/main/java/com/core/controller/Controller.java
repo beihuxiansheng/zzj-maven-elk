@@ -437,7 +437,7 @@ public class Controller {
         long totalHits = searchResponse.getHits().getTotalHits();
         long length = searchResponse.getHits().getHits().length;
 
-        System.out.println("共查询到" + totalHits + "条数据,处理数据条数" + length);
+        System.out.println("共查询到" + totalHits + "条数据，处理数据条数" + length);
 
         transportClient.close();
         
@@ -486,6 +486,8 @@ public class Controller {
 
     	// 5) 匹配所有字段
     	MatchAllQueryBuilder matchAllQueryBuilder = QueryBuilders.matchAllQuery();
+
+    	// 设置 查询时候 分词器 queryBuilder.analyzer("ik_smart");
 
 		// 创建查询请求
         SearchRequestBuilder searchRequestBuilder = transportClient.prepareSearch(index);
