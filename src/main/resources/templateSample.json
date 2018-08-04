@@ -23,15 +23,6 @@
 					"store": true,
 					"analyzer": "ik_max_word"
 				},
-				"outerresno": {
-					"type": "text",
-					"store": true
-				},
-				"resattr": {
-					"type": "text",
-					"store": true,
-					"analyzer": "ik_max_word"
-				},
 				"status": {
 					"type": "keyword",
 					"store": true
@@ -50,26 +41,6 @@
 				},
 				"praisecount": {
 					"type": "long",
-					"store": true
-				},
-				"forwardcount": {
-					"type": "long",
-					"store": true
-				},
-				"commentcount": {
-					"type": "long",
-					"store": true
-				},
-				"sourcename": {
-					"type": "text",
-					"store": true
-				},
-				"sourceMedia": {
-					"type": "keyword",
-					"store": true
-				},
-				"sourceurl": {
-					"type": "text",
 					"store": true
 				}
 			}
