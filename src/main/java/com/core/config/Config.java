@@ -5,9 +5,9 @@ import java.net.UnknownHostException;
 import org.elasticsearch.common.settings.Settings;
 import org.springframework.context.annotation.Bean;
 import org.elasticsearch.common.settings.Settings.Builder;
-import org.elasticsearch.common.transport.TransportAddress;
 import org.springframework.beans.factory.annotation.Value;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.transport.TransportAddress;
 import org.springframework.context.annotation.Configuration;
 import org.elasticsearch.transport.client.PreBuiltTransportClient;
 
@@ -35,6 +35,13 @@ public class Config {
 
 
 	public Config() {
+		
+	}
+
+
+
+	@Bean
+	public TransportClient getTransportClient() throws UnknownHostException {
 		try {
 			builder = Settings.builder();
 			builder.put("cluster.name", esClusterName);
@@ -50,12 +57,7 @@ public class Config {
 		} catch(Exception e) {
 			e.printStackTrace();
 		}
-	}
 
-
-
-	@Bean
-	public TransportClient getTransportClient() throws UnknownHostException {
 		return transportClient;
 	}
 

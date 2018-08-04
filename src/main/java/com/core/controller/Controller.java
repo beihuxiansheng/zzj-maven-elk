@@ -87,8 +87,6 @@ public class Controller {
 			//ActionFuture<CreateIndexResponse> actionFutureCreate = createIndexRequestBuilder.execute();
 			//CreateIndexResponse createIndexResponse = actionFutureCreate.actionGet();
 			CreateIndexResponse createIndexResponse = indicesAdminClient.prepareCreate(index).execute().actionGet(60 * 1000);
-			transportClient.close();
-
 			return createIndexResponse.isAcknowledged();
 		}
 	}
@@ -247,11 +245,9 @@ public class Controller {
 		if(indicesExistsResponse.isExists()) {
 			System.out.println("索引存在，能够删除...");
 			DeleteIndexResponse response = indicesAdminClient.prepareDelete(index).execute().actionGet(60 * 1000);
-			transportClient.close();
 			return response.isAcknowledged();
 		} else {
 			System.out.println("索引不存在，无法删除...");
-			transportClient.close();
 			return Boolean.FALSE;
 		}
 	}
@@ -432,14 +428,11 @@ public class Controller {
 
         // 执行搜索,返回搜索响应信息
         SearchResponse searchResponse = searchRequestBuilder.execute().actionGet(60 * 1000);
-        transportClient.close();
 
         long totalHits = searchResponse.getHits().getTotalHits();
         long length = searchResponse.getHits().getHits().length;
 
         System.out.println("共查询到" + totalHits + "条数据，处理数据条数" + length);
-
-        transportClient.close();
         
         if (searchResponse.status().getStatus() == 200) {
         	// 解析对象
