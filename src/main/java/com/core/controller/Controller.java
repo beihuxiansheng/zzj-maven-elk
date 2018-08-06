@@ -31,6 +31,7 @@ import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.fetch.subphase.highlight.HighlightBuilder;
+import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -491,6 +492,10 @@ public class Controller {
         searchRequestBuilder.setFetchSource(field, null);
 
         // 排序字段
+        // 1）先按 相似度 排序
+        searchRequestBuilder.addSort(SortBuilders.scoreSort().order(SortOrder.DESC));
+
+        // 2）再按 字段 排序
         if (sortField != null) {
             searchRequestBuilder.addSort(sortField, SortOrder.DESC);
         }
