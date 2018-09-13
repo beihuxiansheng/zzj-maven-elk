@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.elasticsearch.search.sort.SortOrder;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.index.query.QueryBuilders;
+import org.elasticsearch.index.query.RangeQueryBuilder;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.TermQueryBuilder;
 import org.elasticsearch.action.search.SearchResponse;
@@ -62,8 +63,9 @@ public class ElasticSearchServiceImpl {
 	 * multiMatchQueryParams ( value : field set )
 	 * 
 	 */
-	public <T> PageBean<T> pageSearch(String index, String type, Map<String, Object> termQueryParams, List<Map<String, Object>> matchQueryList, 
-			Map<String, Set<String>> multiMatchQueryParams, List<BoolQueryBuilder> boolQueryBuilderList, Set<String> sortFields, int pageNo, int pageSize, Class<T> clazz) throws UnknownHostException {
+	public <T> PageBean<T> pageSearch(String index, String type, Map<String, Object> termQueryParams, List<Map<String, Object>> matchQueryList,
+			Map<String, Set<String>> multiMatchQueryParams, Map<String, ArrayList<String>> rangeQueryParams, List<BoolQueryBuilder> boolQueryBuilderList, 
+			Set<String> sortFields, int pageNo, int pageSize, Class<T> clazz) throws UnknownHostException {
 
 		// 创建查询构建者
 		BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
@@ -103,7 +105,22 @@ public class ElasticSearchServiceImpl {
 			}
 		}
 
-		// 4) BoolQueryBuilderList
+		// 4) RangeQueryBuilder
+		if (rangeQueryParams != null && rangeQueryParams.size() > 0) {
+			Set<String> keySet = rangeQueryParams.keySet();
+
+			for(String key : keySet) {
+				ArrayList<String> rangeValueList = rangeQueryParams.get(key);
+
+				RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery(key);
+				rangeQueryBuilder.from(rangeValueList.get(0), Boolean.TRUE);
+				rangeQueryBuilder.to(rangeValueList.get(1), Boolean.TRUE);
+
+				boolQueryBuilder.must(rangeQueryBuilder);
+			}
+		}
+
+		// 5) BoolQueryBuilderList
 		if (boolQueryBuilderList != null && boolQueryBuilderList.size() > 0) {
 			for(BoolQueryBuilder queryBuilder : boolQueryBuilderList) {
 				boolQueryBuilder.must(queryBuilder);
